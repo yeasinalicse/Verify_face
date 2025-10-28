@@ -101,33 +101,87 @@ fun LivenessScreen(
         if (done) analyzer.close()
     }
 
-    Column(Modifier.fillMaxSize()) {
-        // Camera preview
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            CameraPreview(
-                modifier = Modifier.fillMaxSize(),
-                analyzer = analyzer
-            )
+    // current step index map
+    val stepIndex = remember(instruction) {
+        when {
+            instruction.contains("Blink", ignoreCase = true) -> 0
+            instruction.contains("LEFT", ignoreCase = true) -> 1
+            instruction.contains("Smile", ignoreCase = true) -> 2
+            instruction.contains("passed", ignoreCase = true) -> 2
+            else -> 0
         }
+    }
 
-        // Instructions + Status
+    Box(Modifier.fillMaxSize()) {
+        // 1) Camera preview
+        CameraPreview(
+            modifier = Modifier.fillMaxSize(),
+            analyzer = analyzer
+        )
+
+        // 2) HUD Overlay
+        // Top: circular step ring + instruction pill
         Column(
             Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(instruction, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(status, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(8.dp))
-            if (!done) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            } else {
-                Text("✅ Verification complete", fontWeight = FontWeight.SemiBold)
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .align(Alignment.CenterHorizontally),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularStepProgress(
+                    modifier = Modifier.fillMaxSize(),
+                    totalSteps = 3,
+                    currentStepIndex = stepIndex
+                )
+                // center title
+                Text(
+                    text = "${stepIndex + 1}/3",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+            StatusPill(
+                text = instruction,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            // Bottom: status text + animated arrow (only for TURN_LEFT)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(status, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(8.dp))
+
+                if (!done && instruction.contains("LEFT", ignoreCase = true)) {
+                    // ভিডিওর মতো বামদিকের অ্যারো
+                    BouncingArrowLeft(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+                if (!done) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                } else {
+                    Text("✅ Verification complete", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }
