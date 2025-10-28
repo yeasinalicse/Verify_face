@@ -54,16 +54,16 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     val cameraxVersion = "1.3.4"
-    implementation("androidx.camera:camera-core:$cameraxVersion")
-    implementation("androidx.camera:camera-camera2:$cameraxVersion")
-    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
-    implementation("androidx.camera:camera-view:$cameraxVersion") // PreviewView/Compose interop
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view) // PreviewView/Compose interop
 
 
     // ML Kit Face Detection (on-device)
-    implementation("com.google.mlkit:face-detection:16.1.7")
+    implementation(libs.face.detection)
     // Permissions helper (optional, we’ll do manual)
-    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+    implementation(libs.accompanist.permissions)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
