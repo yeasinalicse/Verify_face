@@ -53,6 +53,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.compose.animation.core)
 
     val cameraxVersion = "1.3.4"
     implementation(libs.androidx.camera.core)

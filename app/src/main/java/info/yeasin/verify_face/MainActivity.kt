@@ -6,16 +6,34 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.face.Face
@@ -146,7 +164,6 @@ fun LivenessScreen(
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            StatusPill(text = instruction)
             Spacer(Modifier.height(8.dp))
             Text(status, style = MaterialTheme.typography.bodyMedium)
 
@@ -163,114 +180,73 @@ fun LivenessScreen(
             if (!done) {
                 LinearProgressIndicator(Modifier.fillMaxWidth(0.9f))
             } else {
-                Text("✅ Verification complete", fontWeight = FontWeight.SemiBold)
+                val scale by animateFloatAsState(
+                    targetValue = 1f,
+                    animationSpec = tween(250),
+                    label = ""
+                )
+                val alpha by animateFloatAsState(
+                    targetValue = 1f,
+                    animationSpec = tween(250),
+                    label = ""
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            this.scaleX = scale
+                            this.scaleY = scale
+                            this.alpha = alpha
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = "Verified",
+                            tint = Color(0xFF2E7D32), // success green
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "Verification complete",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
             }
         }
     }
 }
+@Composable
+fun BouncingArrowLeft(
+    modifier: Modifier = Modifier,
+    color: Color = Color.Black
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -20f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
 
-//
-//@Composable
-//fun LivenessScreen(
-//    status: String,
-//    instruction: String,
-//    done: Boolean,
-//    onFaceData: (Face) -> Unit,
-//    onNoFace: () -> Unit
-//) {
-//    val analyzer = remember {
-//        FaceAnalyzer(
-//            onFace = { f -> onFaceData(f) },
-//            onNoFace = { onNoFace() }
-//        )
-//    }
-//
-//    LaunchedEffect(done) {
-//        if (done) analyzer.close()
-//    }
-//
-//    // current step index map
-//    val stepIndex = remember(instruction) {
-//        when {
-//            instruction.contains("Blink", ignoreCase = true) -> 0
-//            instruction.contains("LEFT", ignoreCase = true) -> 1
-//            instruction.contains("Smile", ignoreCase = true) -> 2
-//            instruction.contains("passed", ignoreCase = true) -> 2
-//            else -> 0
-//        }
-//    }
-//
-//    Box(Modifier.fillMaxSize()) {
-//        // 1) Camera preview
-//        CameraPreview(
-//            modifier = Modifier.fillMaxSize(),
-//            analyzer = analyzer
-//        )
-//
-//        // 2) HUD Overlay
-//        // Top: circular step ring + instruction pill
-//        Column(
-//            Modifier
-//                .fillMaxSize()
-//                .padding(16.dp)
-//        ) {
-//            Box(
-//                modifier = Modifier
-//                    .size(120.dp)
-//                    .align(Alignment.CenterHorizontally),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                CircularStepProgress(
-//                    modifier = Modifier.fillMaxSize(),
-//                    totalSteps = 3,
-//                    currentStepIndex = stepIndex
-//                )
-//                // center title
-//                Text(
-//                    text = "${stepIndex + 1}/3",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    fontWeight = FontWeight.Bold
-//                )
-//            }
-//
-//            Spacer(Modifier.height(10.dp))
-//            StatusPill(
-//                text = instruction,
-//                modifier = Modifier.align(Alignment.CenterHorizontally)
-//            )
-//
-//            Spacer(Modifier.weight(1f))
-//
-//            // Bottom: status text + animated arrow (only for TURN_LEFT)
-//            Column(
-//                Modifier
-//                    .fillMaxWidth()
-//                    .padding(bottom = 12.dp),
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Text(status, style = MaterialTheme.typography.bodyMedium)
-//                Spacer(Modifier.height(8.dp))
-//
-//                if (!done && instruction.contains("LEFT", ignoreCase = true)) {
-//                    // ভিডিওর মতো বামদিকের অ্যারো
-//                    BouncingArrowLeft(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(64.dp)
-//                    )
-//                }
-//
-//                Spacer(Modifier.height(8.dp))
-//                if (!done) {
-//                    LinearProgressIndicator(
-//                        modifier = Modifier
-//                            .fillMaxWidth(0.9f)
-//                            .align(Alignment.CenterHorizontally)
-//                    )
-//                } else {
-//                    Text("✅ Verification complete", fontWeight = FontWeight.SemiBold)
-//                }
-//            }
-//        }
-//    }
-//}
+    Icon(
+        imageVector = Icons.Default.ArrowForward,
+        contentDescription = "Bouncing Arrow Left",
+        tint = color,
+        modifier = modifier
+            .offset(y = offsetY.dp)
+            .size(48.dp)
+    )
+}
+
+
